@@ -1,10 +1,14 @@
 # CasadiDemo：从数学模型到 C++ 优化求解
 
+[下载 ZIP](https://github.com/libai1943/CasadiDemo/archive/refs/heads/main.zip) · [从这里开始](#先选对运行入口)
+
 本仓库是中文图书 **《非结构化场景自动驾驶轨迹规划技术》** 第十三章“非结构化场景轨迹规划软件系统部署方法”的配套代码。书中第 **174 页、第 13.4 节“基于 CasADi 的优化问题建模与求解指令简介”** 引用了本仓库，通过一个小型非线性规划例子介绍 CasADi 的 C++ 建模与求解接口。
 
 English title translation: *Trajectory Planning Techniques for Autonomous Driving in Unstructured Environments*. **This book is written in Chinese.** This repository accompanies Chapter 13 and demonstrates how to formulate and solve a nonlinear program using the CasADi C++ interface.
 
 建议先阅读书中第 13.4 节，再运行 [`casadi_example/casadi_example.cc`](casadi_example/casadi_example.cc)，对照变量、目标函数、约束和求解指令逐项理解。仓库同时保留了一个基于 ROS 1 的车辆轨迹规划工程，可用于进一步阅读搜索、轨迹优化与可视化之间的衔接。
+
+**配套图书**　李柏著，《非结构化场景自动驾驶轨迹规划技术》，机械工业出版社，2026 年 6 月，第十三章。[作者著作目录](https://faculty.ecnu.edu.cn/_s15/lb2_26496/main.psp)
 
 ## CasADi 是什么
 
@@ -154,6 +158,18 @@ roslaunch parking_planner test.launch
 ```
 
 `casadi_DIR` 在这里用于根目录的 `find_package(casadi REQUIRED)`，应指向 `casadi-config.cmake` 所在目录。根工程依赖 `roscpp`、`rospy`、`geometry_msgs`、`std_msgs`、`tf`、`visualization_msgs`，演示还使用 RViz。`test.launch` 会装载仓库内的参数和场景配置；RViz 的初始位姿与目标工具分别对应 `/initialpose` 和 `/move_base_simple/goal`，鼠标发布点对应 `/clicked_point`。ROS 工程的优化器也使用 MA27，需要同样配置好求解器运行环境。
+
+## 用解检查建模是否正确
+
+在基础示例的终端输出中记下 `x, y, z` 和 `Optimal cost`。把数值代回下面三行，即可分别核对等式、下界和上界在程序里的写法。
+
+| 一般约束 | 理论解 `(1,2,3)` 的取值 | 在代码中核对 |
+| --- | --- | --- |
+| `x + z = 4` | 4，等式成立 | `lbg(0)` 和 `ubg(0)` 均为 4 |
+| `x + y ≥ 3` | 3，下界恰好取到 | `lbg(1) = 3` |
+| `y + z ≤ 6` | 5，距上界还有 1 | `ubg(2) = 6` |
+
+例如，把最后一个上界从 6 收紧到 4.9 并重新编译，原来的零代价解便会违反该约束。比较两次结果，就能看到改动一个数值边界如何改变最优解。书中例题请注明《非结构化场景自动驾驶轨迹规划技术》第十三章第 13.4 节。
 
 ## 推荐阅读顺序
 
